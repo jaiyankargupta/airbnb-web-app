@@ -1,5 +1,5 @@
-from app.database import engine, Base, SessionLocal
-from app.models import User, Listing, Booking, Review
+from app.db import engine, Base, SessionLocal
+from app.db import User, Listing, Booking, Review
 
 def seed_db():
     Base.metadata.drop_all(bind=engine)

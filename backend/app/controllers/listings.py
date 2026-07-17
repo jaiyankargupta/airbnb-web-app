@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import Optional
-from app import models, schemas
+from app.db import models
+from app import schemas
 
 def get_listings(
     db: Session,

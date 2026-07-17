@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
-from datetime import datetime
-from app import models, schemas
+from app.db import models
+from app import schemas
+from app.utils import parse_date, calculate_nights
 
 def get_bookings(db: Session, user_id: int, role: str):
     if role == "host":
@@ -18,8 +19,8 @@ def create_booking(db: Session, booking_in: schemas.BookingCreate, guest_id: int
         return None, "Listing not found"
     
     try:
-        start_dt = datetime.strptime(booking_in.start_date, "%Y-%m-%d")
-        end_dt = datetime.strptime(booking_in.end_date, "%Y-%m-%d")
+        start_dt = parse_date(booking_in.start_date)
+        end_dt = parse_date(booking_in.end_date)
     except ValueError:
         return None, "Invalid date format, use YYYY-MM-DD"
     
@@ -36,7 +37,7 @@ def create_booking(db: Session, booking_in: schemas.BookingCreate, guest_id: int
     if conflict:
         return None, "Listing is already booked for these dates"
     
-    nights = (end_dt - start_dt).days
+    nights = calculate_nights(booking_in.start_date, booking_in.end_date)
     total_price = nights * listing.price_per_night
     
     new_booking = models.Booking(

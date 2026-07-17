@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from datetime import datetime
-from app import models, schemas
+from app.db import models
+from app import schemas
 
 def create_review(db: Session, review_in: schemas.ReviewCreate, author_id: int):
     listing = db.query(models.Listing).filter(models.Listing.id == review_in.listing_id).first()

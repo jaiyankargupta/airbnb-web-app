@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app import models
+from app.db import models
 
 def get_wishlist(db: Session, user_id: int):
     favorites = db.query(models.Favorite).filter(models.Favorite.user_id == user_id).all()
