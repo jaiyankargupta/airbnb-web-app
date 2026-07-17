@@ -44,7 +44,7 @@ class ListingBase(BaseModel):
     gallery_urls: Optional[str] = None
     amenities: str
     bedrooms: int = 1
-    bathrooms: int = 1
+    bathrooms: float = 1.0
     max_guests: int = 2
 
 class ListingCreate(ListingBase):

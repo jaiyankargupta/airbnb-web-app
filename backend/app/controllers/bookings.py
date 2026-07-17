@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from app.db import models
 from app import schemas
 from app.utils import parse_date, calculate_nights
+from app.controllers.listings import invalidate_listing_cache
 
 def get_bookings(db: Session, user_id: int, role: str):
     if role == "host":
@@ -52,6 +53,7 @@ def create_booking(db: Session, booking_in: schemas.BookingCreate, guest_id: int
     db.add(new_booking)
     db.commit()
     db.refresh(new_booking)
+    invalidate_listing_cache(new_booking.listing_id)
     return new_booking, None
 
 def cancel_booking(db: Session, booking_id: int, user_id: int):
@@ -67,4 +69,5 @@ def cancel_booking(db: Session, booking_id: int, user_id: int):
     booking.status = "cancelled"
     db.commit()
     db.refresh(booking)
+    invalidate_listing_cache(booking.listing_id)
     return booking

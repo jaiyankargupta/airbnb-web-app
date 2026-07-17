@@ -1,7 +1,23 @@
+import os
+import json
+from upstash_redis import Redis
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.db import models
 from app import schemas
+
+redis_url = os.getenv("UPSTASH_REDIS_REST_URL")
+redis_token = os.getenv("UPSTASH_REDIS_REST_TOKEN")
+redis_client = None
+if redis_url and redis_token:
+    redis_client = Redis(url=redis_url, token=redis_token)
+
+def invalidate_listing_cache(listing_id: int):
+    if redis_client:
+        try:
+            redis_client.delete(f"listing:{listing_id}")
+        except Exception as e:
+            print(f"Redis delete error: {e}")
 
 def get_listings(
     db: Session,
@@ -40,6 +56,15 @@ def get_listings(
     return listings
 
 def get_listing(db: Session, listing_id: int):
+    cache_key = f"listing:{listing_id}"
+    if redis_client:
+        try:
+            cached = redis_client.get(cache_key)
+            if cached:
+                return json.loads(cached)
+        except Exception as e:
+            print(f"Redis get error: {e}")
+
     listing = db.query(models.Listing).filter(models.Listing.id == listing_id).first()
     if not listing:
         return None
@@ -51,9 +76,54 @@ def get_listing(db: Session, listing_id: int):
     ).all()
 
     booked_dates = [f"{b.start_date}:{b.end_date}" for b in bookings]
-    listing.reviews = reviews
-    listing.booked_dates = booked_dates
-    return listing
+    
+    listing_dict = {
+        "id": listing.id,
+        "title": listing.title,
+        "description": listing.description,
+        "price_per_night": listing.price_per_night,
+        "location": listing.location,
+        "category": listing.category,
+        "host_id": listing.host_id,
+        "image_url": listing.image_url,
+        "gallery_urls": listing.gallery_urls,
+        "amenities": listing.amenities,
+        "bedrooms": listing.bedrooms,
+        "bathrooms": listing.bathrooms,
+        "max_guests": listing.max_guests,
+        "rating": listing.rating,
+        "review_count": listing.review_count,
+        "host": {
+            "id": listing.host.id,
+            "name": listing.host.name,
+            "email": listing.host.email,
+            "role": listing.host.role,
+            "is_superhost": listing.host.is_superhost,
+            "avatar_url": listing.host.avatar_url
+        },
+        "reviews": [
+            {
+                "id": r.id,
+                "rating": r.rating,
+                "comment": r.comment,
+                "created_at": r.created_at,
+                "author": {
+                    "id": r.author.id,
+                    "name": r.author.name,
+                    "avatar_url": r.author.avatar_url
+                }
+            } for r in reviews
+        ],
+        "booked_dates": booked_dates
+    }
+
+    if redis_client:
+        try:
+            redis_client.setex(cache_key, 30, json.dumps(listing_dict))
+        except Exception as e:
+            print(f"Redis set error: {e}")
+
+    return listing_dict
 
 def create_listing(db: Session, listing_in: schemas.ListingCreate, host_id: int):
     new_listing = models.Listing(
@@ -85,6 +155,7 @@ def update_listing(db: Session, listing_id: int, listing_in: schemas.ListingCrea
     
     db.commit()
     db.refresh(listing)
+    invalidate_listing_cache(listing_id)
     return listing
 
 def delete_listing(db: Session, listing_id: int, host_id: int) -> bool:
@@ -94,4 +165,5 @@ def delete_listing(db: Session, listing_id: int, host_id: int) -> bool:
     
     db.delete(listing)
     db.commit()
+    invalidate_listing_cache(listing_id)
     return True

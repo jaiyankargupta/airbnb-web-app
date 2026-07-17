@@ -38,13 +38,13 @@ export default function WishlistPage() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex flex-col gap-3">
+            <div key={i} className="flex flex-col gap-3 w-full">
               <div className="aspect-[20/19] w-full rounded-2xl shimmer" />
-              <div className="h-4 w-2/3 rounded bg-gray-200 shimmer" />
-              <div className="h-3 w-1/2 rounded bg-gray-200 shimmer" />
-              <div className="h-4 w-1/3 rounded bg-gray-200 shimmer" />
+              <div className="h-4 w-2/3 rounded shimmer" />
+              <div className="h-3 w-1/2 rounded shimmer" />
+              <div className="h-4 w-1/3 rounded shimmer" />
             </div>
           ))}
         </div>

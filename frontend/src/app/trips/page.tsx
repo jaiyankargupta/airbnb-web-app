@@ -87,9 +87,9 @@ export default function TripsPage() {
       </div>
 
       {loading ? (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 w-full">
           {[1, 2].map((i) => (
-            <div key={i} className="h-44 w-full rounded-2xl bg-gray-200 shimmer" />
+            <div key={i} className="h-44 w-full rounded-2xl shimmer" />
           ))}
         </div>
       ) : bookings.length === 0 ? (

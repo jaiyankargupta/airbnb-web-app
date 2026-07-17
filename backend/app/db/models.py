@@ -35,7 +35,7 @@ class Listing(Base):
     gallery_urls = Column(String, nullable=True)
     amenities = Column(String, nullable=False)
     bedrooms = Column(Integer, default=1)
-    bathrooms = Column(Integer, default=1)
+    bathrooms = Column(Float, default=1.0)
     max_guests = Column(Integer, default=2)
     rating = Column(Float, default=5.0)
     review_count = Column(Integer, default=0)

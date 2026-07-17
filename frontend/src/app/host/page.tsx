@@ -108,7 +108,7 @@ export default function HostDashboardPage() {
       </div>
 
       {loading ? (
-        <div className="h-96 w-full rounded-2xl bg-gray-200 shimmer" />
+        <div className="h-96 w-full rounded-2xl shimmer" />
       ) : (
         <>
           <HostStats

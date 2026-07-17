@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
 
 load_dotenv()
 
@@ -27,7 +28,11 @@ elif db_url.startswith("sqlite"):
 else:
     sqlalchemy_url = db_url
 
-engine = create_engine(sqlalchemy_url, connect_args=connect_args)
+if "libsql" in sqlalchemy_url:
+    engine = create_engine(sqlalchemy_url, connect_args=connect_args, poolclass=NullPool)
+else:
+    engine = create_engine(sqlalchemy_url, connect_args=connect_args)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
