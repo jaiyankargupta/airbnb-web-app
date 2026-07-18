@@ -5,7 +5,8 @@ import { useApp } from "../context/AppContext";
 import ListingCard, { Listing } from "../components/ListingCard";
 import CategoryList from "../components/explore/CategoryList";
 import FiltersModal from "../components/explore/FiltersModal";
-import { SlidersHorizontal } from "lucide-react";
+import ExploreMap from "../components/explore/ExploreMap";
+import { SlidersHorizontal, Map, List } from "lucide-react";
 import { api } from "../utils/api";
 
 export default function ExplorePage() {
@@ -15,6 +16,7 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [showFiltersModal, setShowFiltersModal] = useState<boolean>(false);
   const [priceMax, setPriceMax] = useState<number>(1000);
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
   const fetchListings = async () => {
     setLoading(true);
@@ -37,7 +39,7 @@ export default function ExplorePage() {
 
   useEffect(() => {
     fetchListings();
-  }, [selectedCategory, searchQuery, priceMax]);
+  }, [selectedCategory, searchQuery.location, searchQuery.startDate, searchQuery.endDate, searchQuery.guests, priceMax]);
 
   const handleReset = () => {
     setSelectedCategory("");
@@ -49,7 +51,7 @@ export default function ExplorePage() {
 
   return (
     <div className="flex-1 flex flex-col">
-      <div className="bg-white border-b border-gray-border py-3 px-6 md:px-12 flex justify-between items-center sticky top-[73px] z-30 shadow-sm gap-4 overflow-x-auto">
+      <div className="bg-white border-b border-gray-border py-3 px-4 md:px-12 flex justify-between items-center sticky top-[73px] z-30 shadow-sm gap-4 overflow-hidden min-w-0">
         <CategoryList
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
@@ -74,39 +76,110 @@ export default function ExplorePage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto w-full px-6 md:px-12 py-8 flex-1">
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <div key={i} className="flex flex-col gap-3 w-full">
-                <div className="aspect-[20/19] w-full rounded-2xl shimmer" />
-                <div className="h-4 w-2/3 rounded shimmer" />
-                <div className="h-3 w-1/2 rounded shimmer" />
-                <div className="h-4 w-1/3 rounded shimmer" />
-              </div>
-            ))}
-          </div>
-        ) : listings.length === 0 ? (
-          <div className="text-center py-20 max-w-md mx-auto">
-            <h3 className="text-xl font-bold text-gray-800 mb-2">No results found</h3>
-            <p className="text-gray-500 text-sm mb-6">
-              Try adjusting your search criteria, price range, or category filters.
-            </p>
-            <button
-              onClick={handleReset}
-              className="airbnb-btn px-5 py-2.5 rounded-xl text-sm"
-            >
-              Remove all filters
-            </button>
+      <div className="max-w-7xl mx-auto w-full px-6 md:px-12 py-8 flex-1 relative">
+        {searchQuery.location ? (
+          <div className="flex flex-col lg:flex-row gap-8 items-start">
+            <div className="flex-1 w-full min-w-0">
+              {viewMode === "list" ? (
+                loading ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 w-full">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i} className="flex flex-col gap-3 w-full">
+                        <div className="aspect-[20/19] w-full rounded-2xl shimmer" />
+                        <div className="h-4 w-2/3 rounded shimmer" />
+                        <div className="h-3 w-1/2 rounded shimmer" />
+                        <div className="h-4 w-1/3 rounded shimmer" />
+                      </div>
+                    ))}
+                  </div>
+                ) : listings.length === 0 ? (
+                  <div className="text-center py-20 max-w-md mx-auto">
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">No results found</h3>
+                    <p className="text-gray-500 text-sm mb-6">
+                      Try adjusting your search criteria, price range, or category filters.
+                    </p>
+                    <button
+                      onClick={handleReset}
+                      className="airbnb-btn px-5 py-2.5 rounded-xl text-sm"
+                    >
+                      Remove all filters
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-10">
+                    {listings.map((listing) => (
+                      <ListingCard key={listing.id} listing={listing} />
+                    ))}
+                  </div>
+                )
+              ) : (
+                <div className="lg:hidden w-full h-[calc(100vh-220px)] min-h-[400px]">
+                  <ExploreMap listings={listings} />
+                </div>
+              )}
+            </div>
+
+            <div className="hidden lg:block w-[400px] xl:w-[480px] shrink-0 sticky top-[150px] h-[calc(100vh-190px)] min-h-[500px]">
+              <ExploreMap listings={listings} />
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
-            {listings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
-            ))}
+          <div>
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <div key={i} className="flex flex-col gap-3 w-full">
+                    <div className="aspect-[20/19] w-full rounded-2xl shimmer" />
+                    <div className="h-4 w-2/3 rounded shimmer" />
+                    <div className="h-3 w-1/2 rounded shimmer" />
+                    <div className="h-4 w-1/3 rounded shimmer" />
+                  </div>
+                ))}
+              </div>
+            ) : listings.length === 0 ? (
+              <div className="text-center py-20 max-w-md mx-auto">
+                <h3 className="text-xl font-bold text-gray-800 mb-2">No results found</h3>
+                <p className="text-gray-500 text-sm mb-6">
+                  Try adjusting your search criteria, price range, or category filters.
+                </p>
+                <button
+                  onClick={handleReset}
+                  className="airbnb-btn px-5 py-2.5 rounded-xl text-sm"
+                >
+                  Remove all filters
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
+                {listings.map((listing) => (
+                  <ListingCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {searchQuery.location && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 lg:hidden">
+          <button
+            onClick={() => setViewMode(viewMode === "list" ? "map" : "list")}
+            className="bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 px-5 py-3 rounded-full font-semibold text-sm shadow-xl flex items-center gap-2 transition"
+          >
+            {viewMode === "list" ? (
+              <>
+                <Map size={16} />
+                <span>Show map</span>
+              </>
+            ) : (
+              <>
+                <List size={16} />
+                <span>Show list</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       <FiltersModal
         isOpen={showFiltersModal}

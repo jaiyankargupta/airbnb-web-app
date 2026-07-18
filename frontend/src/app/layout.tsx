@@ -7,7 +7,7 @@ import SearchModal from "../components/SearchModal";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Airbnb Clone - Modern Vacation Rentals & Stays",
+  title: "Airbnb | Holiday rentals, cabins, beach houses, unique homes & experiences",
   description: "Browse beautiful homes, cabins, villas and mansions. Book stays in a mock marketplace.",
 };
 

@@ -40,8 +40,9 @@ export default function ReservationCard({
   basePrice,
   cleaningFee,
   serviceFee,
-  totalPrice
-}: ReservationCardProps) {
+  totalPrice,
+  isHost
+}: ReservationCardProps & { isHost?: boolean }) {
   return (
     <div className="border border-gray-border rounded-3xl p-6 shadow-card sticky top-28 bg-white flex flex-col gap-6">
       <div className="flex justify-between items-baseline">
@@ -51,9 +52,15 @@ export default function ReservationCard({
         </div>
         <div className="flex items-center gap-1 text-xs text-gray-800 font-medium">
           <Star size={12} className="fill-current text-gray-900" />
-          <span>{rating.toFixed(2)}</span>
-          <span>&middot;</span>
-          <span className="underline">{reviewCount} reviews</span>
+          {reviewCount > 0 ? (
+            <>
+              <span>{rating.toFixed(2)}</span>
+              <span>&middot;</span>
+              <span className="underline">{reviewCount} {reviewCount === 1 ? "review" : "reviews"}</span>
+            </>
+          ) : (
+            <span>New</span>
+          )}
         </div>
       </div>
 
@@ -103,11 +110,19 @@ export default function ReservationCard({
         </div>
       )}
 
+      {isHost && (
+        <div className="flex items-start gap-2 text-rose-600 bg-rose-50 p-3 rounded-2xl text-xs border border-rose-100">
+          <ShieldAlert size={16} className="shrink-0 mt-0.5" />
+          <span>You cannot book your own listing</span>
+        </div>
+      )}
+
       <button
         onClick={handleReserve}
-        disabled={!!dateError}
-        className={`airbnb-btn w-full py-3.5 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-1.5 ${dateError ? "opacity-50 cursor-not-allowed" : ""
-          }`}
+        disabled={!!dateError || isHost}
+        className={`airbnb-btn w-full py-3.5 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-1.5 ${
+          dateError || isHost ? "opacity-50 cursor-not-allowed" : ""
+        }`}
       >
         <span>Reserve</span>
       </button>

@@ -19,6 +19,9 @@ def create_booking(db: Session, booking_in: schemas.BookingCreate, guest_id: int
     if not listing:
         return None, "Listing not found"
     
+    if listing.host_id == guest_id:
+        return None, "You cannot book your own listing"
+    
     try:
         start_dt = parse_date(booking_in.start_date)
         end_dt = parse_date(booking_in.end_date)

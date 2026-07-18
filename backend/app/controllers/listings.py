@@ -104,12 +104,17 @@ def get_listing(db: Session, listing_id: int):
         "reviews": [
             {
                 "id": r.id,
+                "listing_id": r.listing_id,
+                "author_id": r.author_id,
                 "rating": r.rating,
                 "comment": r.comment,
                 "created_at": r.created_at,
                 "author": {
                     "id": r.author.id,
                     "name": r.author.name,
+                    "email": r.author.email,
+                    "role": r.author.role,
+                    "is_superhost": r.author.is_superhost,
                     "avatar_url": r.author.avatar_url
                 }
             } for r in reviews
@@ -119,7 +124,7 @@ def get_listing(db: Session, listing_id: int):
 
     if redis_client:
         try:
-            redis_client.setex(cache_key, 30, json.dumps(listing_dict))
+            redis_client.setex(cache_key, 3600, json.dumps(listing_dict))
         except Exception as e:
             print(f"Redis set error: {e}")
 

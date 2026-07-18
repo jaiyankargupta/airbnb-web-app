@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #222222;
@@ -13,6 +15,16 @@
   --radius-small: 8px;
   --shadow-standard: 0 6px 16px rgba(0, 0, 0, 0.12);
   --shadow-card: 0 1px 2px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.dark {
+  --background: #121212;
+  --foreground: #f3f4f6;
+  --gray-light: #1c1c1e;
+  --gray-border: #2c2c2e;
+  --gray-medium: #a1a1a1;
+  --shadow-standard: 0 6px 16px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
 }
 
 @theme inline {
@@ -94,4 +106,51 @@ body {
   100% {
     background-position: -200% 0;
   }
+}
+
+.dark body {
+  background-color: #121212;
+  color: #f3f4f6;
+}
+
+.dark .bg-white {
+  background-color: #1e1e1e !important;
+}
+
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700 {
+  color: #f3f4f6 !important;
+}
+
+.dark .text-gray-600,
+.dark .text-gray-500 {
+  color: #a1a1a1 !important;
+}
+
+.dark .border-gray-200,
+.dark .border-gray-border {
+  border-color: #2c2c2e !important;
+}
+
+.dark .bg-gray-light,
+.dark .bg-gray-100 {
+  background-color: #262626 !important;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #262626 !important;
+  color: #f3f4f6 !important;
+  border-color: #2c2c2e !important;
+}
+
+.dark input::placeholder {
+  color: #717171 !important;
+}
+
+.dark .shimmer {
+  background: linear-gradient(90deg, #262626 25%, #373737 50%, #262626 75%) !important;
+  background-size: 200% 100% !important;
 }

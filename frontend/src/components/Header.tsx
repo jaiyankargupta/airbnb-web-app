@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Globe, Menu, User, Heart, Briefcase, Plane } from "lucide-react";
+import { Search, Globe, Menu, User, Heart, Briefcase, Plane, Sun, Moon } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
 export default function Header() {
@@ -12,13 +12,31 @@ export default function Header() {
     currentUser,
     toggleRole,
     searchQuery,
+    resetSearchQuery,
     setSearchModalOpen,
     currentUserId,
     setCurrentUserId,
-    addToast
+    addToast,
+    theme,
+    toggleTheme
   } = useApp();
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuOpen]);
 
   const handleUserChange = (id: number) => {
     setCurrentUserId(id);
@@ -31,13 +49,15 @@ export default function Header() {
     const dates = searchQuery.startDate && searchQuery.endDate
       ? `${searchQuery.startDate.substring(5)} - ${searchQuery.endDate.substring(5)}`
       : "Any week";
-    const guests = searchQuery.guests > 1 ? `${searchQuery.guests} guests` : "Add guests";
+    const guests = searchQuery.guests >= 1
+      ? `${searchQuery.guests} guest${searchQuery.guests > 1 ? "s" : ""}`
+      : "Add guests";
     return `${loc} | ${dates} | ${guests}`;
   };
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-border py-4 px-6 md:px-12 flex justify-between items-center shadow-sm">
-      <Link href="/" className="flex items-center gap-1.5 text-primary">
+      <Link href="/" onClick={resetSearchQuery} className="flex items-center gap-1.5 text-primary">
         <svg
           viewBox="0 0 32 32"
           xmlns="http://www.w3.org/2000/svg"
@@ -52,13 +72,13 @@ export default function Header() {
 
       <div
         onClick={() => setSearchModalOpen(true)}
-        className="flex items-center border border-gray-border rounded-full py-2 pl-6 pr-2 shadow-sm hover:shadow-md cursor-pointer transition max-w-lg w-full sm:w-auto mx-4"
+        className="flex items-center justify-between border border-gray-border rounded-full py-2 pl-4 pr-2 shadow-sm hover:shadow-md cursor-pointer transition flex-1 min-w-0 sm:flex-initial sm:w-auto max-w-xs sm:max-w-md md:max-w-lg mx-2 sm:mx-4"
       >
-        <span className="text-sm font-semibold text-gray-800 pr-4 whitespace-nowrap overflow-hidden text-ellipsis">
+        <span className="text-xs sm:text-sm font-semibold text-gray-800 pr-2 sm:pr-4 whitespace-nowrap overflow-hidden text-ellipsis min-w-0">
           {getSearchLabel()}
         </span>
-        <div className="bg-primary text-white p-2 rounded-full flex items-center justify-center">
-          <Search size={16} />
+        <div className="bg-primary text-white p-2 rounded-full flex items-center justify-center shrink-0">
+          <Search size={14} />
         </div>
       </div>
 
@@ -88,15 +108,7 @@ export default function Header() {
           Switch to {currentUser?.role === "guest" ? "Hosting" : "Traveling"}
         </button>
 
-        <Link
-          href="/wishlist"
-          className="p-2 rounded-full hover:bg-gray-light text-gray-600 relative"
-          title="Wishlist"
-        >
-          <Heart size={20} />
-        </Link>
-
-        <div className="relative">
+        <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="flex items-center gap-3 border border-gray-border rounded-full p-2 hover:shadow-md transition focus:outline-none bg-white"
@@ -146,6 +158,16 @@ export default function Header() {
                 >
                   Wishlists
                 </Link>
+                <button
+                  onClick={() => {
+                    toggleTheme();
+                    setMenuOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-light text-gray-700 flex items-center justify-between border-t border-gray-border"
+                >
+                  <span>{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
+                  {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
+                </button>
                 {currentUser?.role === "host" && (
                   <Link
                     href="/host"
@@ -163,27 +185,24 @@ export default function Header() {
                 </p>
                 <button
                   onClick={() => handleUserChange(1)}
-                  className={`w-full text-left px-4 py-2 hover:bg-gray-light text-xs flex justify-between items-center ${
-                    currentUserId === 1 ? "text-primary font-bold" : "text-gray-600"
-                  }`}
+                  className={`w-full text-left px-4 py-2 hover:bg-gray-light text-xs flex justify-between items-center ${currentUserId === 1 ? "text-primary font-bold" : "text-gray-600"
+                    }`}
                 >
                   <span>Alex Mercer (Guest)</span>
                   {currentUserId === 1 && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
                 </button>
                 <button
                   onClick={() => handleUserChange(2)}
-                  className={`w-full text-left px-4 py-2 hover:bg-gray-light text-xs flex justify-between items-center ${
-                    currentUserId === 2 ? "text-primary font-bold" : "text-gray-600"
-                  }`}
+                  className={`w-full text-left px-4 py-2 hover:bg-gray-light text-xs flex justify-between items-center ${currentUserId === 2 ? "text-primary font-bold" : "text-gray-600"
+                    }`}
                 >
                   <span>Sarah Jenkins (Host, Superhost)</span>
                   {currentUserId === 2 && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
                 </button>
                 <button
                   onClick={() => handleUserChange(3)}
-                  className={`w-full text-left px-4 py-2 hover:bg-gray-light text-xs flex justify-between items-center ${
-                    currentUserId === 3 ? "text-primary font-bold" : "text-gray-600"
-                  }`}
+                  className={`w-full text-left px-4 py-2 hover:bg-gray-light text-xs flex justify-between items-center ${currentUserId === 3 ? "text-primary font-bold" : "text-gray-600"
+                    }`}
                 >
                   <span>John Doe (Host)</span>
                   {currentUserId === 3 && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}

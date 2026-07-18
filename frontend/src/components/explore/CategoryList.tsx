@@ -27,7 +27,7 @@ export default function CategoryList({
   ];
 
   return (
-    <div className="flex gap-8 overflow-x-auto no-scrollbar py-1">
+    <div className="flex-1 min-w-0 flex gap-8 overflow-x-auto no-scrollbar py-1">
       <button
         onClick={() => onSelectCategory("")}
         className={`flex flex-col items-center gap-1.5 pb-2 text-xs font-semibold transition cursor-pointer border-b-2 ${selectedCategory === ""

@@ -64,22 +64,16 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
     ? [listing.image_url, ...listing.gallery_urls.split(",")]
     : [listing.image_url];
 
-  const parsedBookedDates = listing.booked_dates.map((rangeStr: string) => {
-    const [start, end] = rangeStr.split(":");
-    return { start: new Date(start), end: new Date(end) };
-  });
-
   const getOverlapError = () => {
     if (!startDate || !endDate) return null;
-    const start = new Date(startDate);
-    const end = new Date(endDate);
 
-    if (start >= end) {
+    if (startDate >= endDate) {
       return "Checkout date must be after check-in date";
     }
 
-    for (const b of parsedBookedDates) {
-      if (start < b.end && end > b.start) {
+    for (const rangeStr of listing.booked_dates) {
+      const [bStart, bEnd] = rangeStr.split(":");
+      if (startDate < bEnd && endDate > bStart) {
         return "These dates overlap with an existing booking";
       }
     }
@@ -144,9 +138,15 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
         <div className="flex flex-wrap justify-between items-center gap-4 text-sm text-gray-700">
           <div className="flex items-center gap-1.5 font-medium">
             <Star size={16} className="fill-current text-gray-900" />
-            <span>{listing.rating.toFixed(2)}</span>
-            <span>&middot;</span>
-            <span className="underline cursor-pointer">{listing.review_count} reviews</span>
+            {listing.review_count > 0 ? (
+              <>
+                <span>{listing.rating.toFixed(2)}</span>
+                <span>&middot;</span>
+                <span className="underline cursor-pointer">{listing.review_count} {listing.review_count === 1 ? "review" : "reviews"}</span>
+              </>
+            ) : (
+              <span>New</span>
+            )}
             <span>&middot;</span>
             <span className="flex items-center gap-1">
               <MapPin size={14} />
@@ -199,6 +199,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
             cleaningFee={cleaningFee}
             serviceFee={serviceFee}
             totalPrice={totalPrice}
+            isHost={listing.host_id === currentUserId}
           />
         </div>
       </div>
@@ -208,6 +209,24 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
         reviewCount={listing.review_count}
         reviews={listing.reviews}
       />
+
+      <div className="border-t border-gray-border py-8 mt-8">
+        <h3 className="text-xl font-bold text-gray-900 mb-2">Where you'll be</h3>
+        <p className="text-gray-500 text-sm mb-4">{listing.location}</p>
+        <div className="w-full h-80 sm:h-96 rounded-2xl overflow-hidden border border-gray-border shadow-sm">
+          <iframe
+            width="100%"
+            height="100%"
+            title="Location Map"
+            src={`https://maps.google.com/maps?q=${encodeURIComponent(listing.location)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+            frameBorder="0"
+            scrolling="no"
+            marginHeight={0}
+            marginWidth={0}
+            className="filter dark:invert dark:hue-rotate-180"
+          />
+        </div>
+      </div>
 
       {showCheckout && (
         <BookingModal

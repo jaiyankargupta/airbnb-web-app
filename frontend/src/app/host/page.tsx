@@ -77,8 +77,9 @@ export default function HostDashboardPage() {
       .filter((b) => b.status === "confirmed")
       .reduce((sum, b) => sum + b.total_price, 0);
 
-    const averageRating = listings.length > 0
-      ? listings.reduce((sum, l) => sum + l.rating, 0) / listings.length
+    const listingsWithReviews = listings.filter((l) => l.review_count > 0);
+    const averageRating = listingsWithReviews.length > 0
+      ? listingsWithReviews.reduce((sum, l) => sum + l.rating, 0) / listingsWithReviews.length
       : 0;
 
     return {
@@ -147,7 +148,7 @@ export default function HostDashboardPage() {
                         <p className="text-xs text-gray-500 mt-0.5">{listing.location}</p>
                         <div className="flex justify-between text-xs font-semibold text-gray-700 mt-2">
                           <span>${listing.price_per_night} / night</span>
-                          <span>Rating: {listing.rating.toFixed(2)}</span>
+                          <span>Rating: {listing.review_count > 0 ? listing.rating.toFixed(2) : "New"}</span>
                         </div>
                       </div>
 

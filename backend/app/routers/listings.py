@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Header, status
+from fastapi import APIRouter, Depends, HTTPException, Header, status, Response
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.db.database import get_db
@@ -21,10 +21,11 @@ def read_listings(
     return controller.get_listings(db, category, location, guests, start_date, end_date, host_id)
 
 @router.get("/{listing_id}", response_model=schemas.ListingDetailResponse)
-def read_listing(listing_id: int, db: Session = Depends(get_db)):
+def read_listing(listing_id: int, response: Response, db: Session = Depends(get_db)):
     listing = controller.get_listing(db, listing_id)
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found")
+    response.headers["Cache-Control"] = "public, max-age=3600"
     return listing
 
 @router.post("", response_model=schemas.ListingResponse)

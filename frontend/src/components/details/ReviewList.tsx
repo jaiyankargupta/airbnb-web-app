@@ -30,7 +30,11 @@ export default function ReviewList({
       <div className="flex items-center gap-2 mb-6">
         <Star size={20} className="fill-current text-gray-900" />
         <h3 className="font-semibold text-xl text-gray-900">
-          {rating.toFixed(2)} &middot; {reviewCount} reviews
+          {reviewCount > 0 ? (
+            <>{rating.toFixed(2)} &middot; {reviewCount} {reviewCount === 1 ? "review" : "reviews"}</>
+          ) : (
+            <>No reviews yet</>
+          )}
         </h3>
       </div>
 
