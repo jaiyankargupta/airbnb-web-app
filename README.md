@@ -1,139 +1,217 @@
-# Airbnb Web App - SDE Fullstack Assignment
+# My Airbnb Clone - Fullstack SDE Assignment Submission
 
-A fully functional clone of the Airbnb marketplace web application replicating Airbnb's visual aesthetics, user experience, and core booking flows.
-
-## Tech Stack
-
-- **Frontend**: Next.js 16 (React 19, TypeScript, Tailwind CSS, Lucide Icons)
-- **Backend**: Python 3.12 (FastAPI, SQLAlchemy ORM, Uvicorn Server)
-- **Database**: SQLite (relational database storage)
-- **Design System Alignment**: StitchMCP (tokens for light theme layout, palette, and rounded shapes)
+This is my submission for the SDE Fullstack clone assignment. I built a functional clone of Airbnb's web application with the exact design layout, booking calendar interactions, and a fully equipped host CRUD dashboard.
 
 ---
 
-## Architectural Design & Folder Structure
+## Detailed Project Architecture
 
-The repository is divided into frontend and backend applications to isolate concerns:
+The architecture separates concerns between a stateless FastAPI backend and a stateful Next.js frontend, utilizing SQLite for relational data persistence.
 
+### High-Level Architecture Flow Diagram
+
+```mermaid
+graph TD
+    subgraph Client Space (Next.js Frontend)
+        A[Browser / Visitor] -->|User Actions / Stays Search| B[Next.js App Router Pages]
+        B -->|Reads Global State| C[React AppContext]
+        B -->|Fetch Requests| D[api.ts Helper Client]
+    end
+
+    subgraph API Space (FastAPI Backend)
+        D -->|HTTP Request / JSON Payload| E[FastAPI Router Endpoints]
+        E -->|Cors / Headers Validation| F[CORSMiddleware]
+        F -->|Controllers Logic| G[controllers/*.py]
+        
+        subgraph Caching Layer
+            G -->|Check Cache / Fetch Page| H[Upstash Redis Client]
+        end
+    end
+
+    subgraph Persistence Layer (Relational DB)
+        G -->|SQL Queries via SQLAlchemy| I[SQLite Database]
+    end
+    
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style E fill:#bbf,stroke:#333,stroke-width:2px
+    style I fill:#bfb,stroke:#333,stroke-width:2px
+```
+
+### Folder Architecture Structure
 ```
 airbnb-web-app/
 ├── backend/
 │   ├── app/
-│   │   ├── controllers/      # Database logic and CRUD operations
-│   │   ├── db/               # SQLAlchemy engine setup and model definitions
-│   │   ├── routers/          # FastAPI REST endpoints
-│   │   ├── utils/            # Shared helper functions (dates, etc.)
-│   │   ├── main.py           # FastAPI server entry point and CORS middleware
-│   │   ├── schemas.py        # Pydantic input/output schemas
-│   │   └── seed.py           # SQLite initialization and seed script
-│   └── requirements.txt      # Python backend packages
+│   │   ├── controllers/      # Database queries, updates, and Redis caching invalidation logic
+│   │   ├── db/               # SQLAlchemy engine configuration and models definitions
+│   │   ├── routers/          # RESTful FastAPI route schemas and handlers
+│   │   ├── utils/            # Shared date calculation and formatting utility functions
+│   │   ├── main.py           # FastAPI entry point, CORS config, and route inclusions
+│   │   ├── schemas.py        # Pydantic input/output schemas for payloads validation
+│   │   └── seed.py           # SQLite db tables creator and sample data seed generator
+│   └── requirements.txt      # Python requirements (LibSQL, FastAPI, Uvicorn, Upstash Redis)
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── app/              # Next.js App Router pages (Explore, Detail, Trips, Host, Wishlist)
-│   │   ├── components/       # Shared UI and modular subcomponents (Header, Footer, Modals)
-│   │   ├── context/          # React AppContext for active user, search state, and toasts
-│   │   ├── utils/            # Centralized API HTTP client
-│   │   └── styles/           # CSS design variables and custom utilities
-│   ├── .env.local            # Environment configuration
-│   └── package.json          # Node dependencies
+│   │   ├── app/              # Next.js pages (Explore, Detail Stays, Trips History, Host Dashboard)
+│   │   ├── components/       # Modular UI components (Review Modals, Listing Cards, Leaflet Maps)
+│   │   ├── context/          # React AppContext (tracks search query, auth roles switcher, toast notifications)
+│   │   ├── utils/            # Centralized API fetch wrapper client
+│   │   └── styles/           # CSS design variables and custom Tailwind overrides
+│   ├── vercel.json           # Vercel deployment blueprint config
+│   └── package.json          # Node dependencies list
 ```
 
 ---
 
-## Database Schema (SQLite)
+## Database Schema Design
 
-The SQLite database design uses normalized relational tables:
+I designed a clean, normalized relational database structure to represent properties, reservations, and customer reviews.
 
-1. **users**
-   - `id`: INTEGER PRIMARY KEY AUTOINCREMENT
-   - `name`: TEXT NOT NULL
-   - `email`: TEXT UNIQUE NOT NULL
-   - `role`: TEXT NOT NULL ("guest", "host")
-   - `is_superhost`: INTEGER DEFAULT 0 (boolean)
-   - `avatar_url`: TEXT
+### Database Schema Model Diagram
 
-2. **listings**
-   - `id`: INTEGER PRIMARY KEY AUTOINCREMENT
-   - `title`: TEXT NOT NULL
-   - `description`: TEXT NOT NULL
-   - `price_per_night`: REAL NOT NULL
-   - `location`: TEXT NOT NULL
-   - `category`: TEXT NOT NULL (e.g., "Cabins", "Beachfront", "Mansions")
-   - `host_id`: INTEGER NOT NULL (FK users.id)
-   - `image_url`: TEXT NOT NULL (Primary gallery image)
-   - `gallery_urls`: TEXT (Comma-separated gallery image URLs)
-   - `amenities`: TEXT NOT NULL (Comma-separated amenities list)
-   - `bedrooms`: INTEGER DEFAULT 1
-   - `bathrooms`: INTEGER DEFAULT 1
-   - `max_guests`: INTEGER DEFAULT 2
-   - `rating`: REAL DEFAULT 5.0
-   - `review_count`: INTEGER DEFAULT 0
+```mermaid
+erDiagram
+    USERS {
+        int id PK
+        string name
+        string email
+        string role
+        boolean is_superhost
+        string avatar_url
+    }
+    LISTINGS {
+        int id PK
+        string title
+        string description
+        float price_per_night
+        string location
+        string category
+        int host_id FK
+        string image_url
+        string gallery_urls
+        string amenities
+        int bedrooms
+        float bathrooms
+        int max_guests
+        float rating
+        int review_count
+    }
+    BOOKINGS {
+        int id PK
+        int listing_id FK
+        int guest_id FK
+        string start_date
+        string end_date
+        int guest_count
+        float total_price
+        string status
+    }
+    REVIEWS {
+        int id PK
+        int listing_id FK
+        int author_id FK
+        int rating
+        string comment
+        string created_at
+    }
+    WISHLIST {
+        int user_id PK, FK
+        int listing_id PK, FK
+    }
 
-3. **bookings**
-   - `id`: INTEGER PRIMARY KEY AUTOINCREMENT
-   - `listing_id`: INTEGER NOT NULL (FK listings.id)
-   - `guest_id`: INTEGER NOT NULL (FK users.id)
-   - `start_date`: TEXT NOT NULL (YYYY-MM-DD)
-   - `end_date`: TEXT NOT NULL (YYYY-MM-DD)
-   - `guest_count`: INTEGER NOT NULL
-   - `total_price`: REAL NOT NULL
-   - `status`: TEXT NOT NULL DEFAULT "confirmed"
+    USERS ||--o{ LISTINGS : "hosts"
+    USERS ||--o{ BOOKINGS : "makes"
+    USERS ||--o{ REVIEWS : "writes"
+    LISTINGS ||--o{ BOOKINGS : "receives"
+    LISTINGS ||--o{ REVIEWS : "gets"
+    USERS ||--o{ WISHLIST : "favorites"
+    LISTINGS ||--o{ WISHLIST : "saved_by"
+```
 
-4. **reviews**
-   - `id`: INTEGER PRIMARY KEY AUTOINCREMENT
-   - `listing_id`: INTEGER NOT NULL (FK listings.id)
-   - `author_id`: INTEGER NOT NULL (FK users.id)
-   - `rating`: INTEGER NOT NULL
-   - `comment`: TEXT NOT NULL
-   - `created_at`: TEXT NOT NULL (YYYY-MM-DD)
-
-5. **favorites**
-   - `user_id`: INTEGER NOT NULL (FK users.id)
-   - `listing_id`: INTEGER NOT NULL (FK listings.id)
-   - PRIMARY KEY (user_id, listing_id)
+### Table Details
+1. **users**: Represents application profiles. Distinguishes role types ("guest" vs "host").
+2. **listings**: Accommodations posted by hosts. Includes metadata and aggregates like rating and review_count updated dynamically on review submission.
+3. **bookings**: Stays booked by guests. Validated to prevent overlapping reservations.
+4. **reviews**: Stays reviews submitted by guests.
+5. **wishlist**: Stores favorited listings per user.
 
 ---
 
-## Setup Instructions
+## Key Code Design Patterns
 
-### 1. Backend Setup (FastAPI & SQLite)
+### 1. Optimistic UI Updates
+When saving a listing to your Wishlist, the UI changes the heart icon status instantly (0ms delay) and throws a success toast. The API sync occurs in the background. If the server fails, it rolls back to the previous state automatically:
+```typescript
+const previousFavorites = [...favorites];
+// Instantly update UI state
+setFavorites(prev => isFav ? prev.filter(id => id !== listingId) : [...prev, listingId]);
 
-Change to the backend directory, initialize a Python virtual environment, install dependencies, and seed the SQLite database:
+try {
+  if (isFav) await api.wishlist.remove(listingId, currentUserId);
+  else await api.wishlist.add(listingId, currentUserId);
+} catch (error) {
+  // Rollback on server failure
+  setFavorites(previousFavorites);
+}
+```
 
+### 2. Upstash Redis Caching & Invalidation
+To minimize slow database queries, the listing details GET request is cached in Upstash Redis. When a host modifies their listing, or a guest adds a review, the cache for that listing is instantly invalidated to keep data consistent.
+
+### 3. Evaluator Role Switcher
+In the top-right profile menu, you can instantly change active users. This lets you switch between Alex Mercer (Guest) and Sarah Jenkins (Host) to test the complete booking workflow (creating listing -> booking it -> viewing the trips) in a single browser window.
+
+---
+
+## Tech Stack Breakdown
+
+- **Next.js (React 19 + TypeScript)**: Fast page load speeds and Catch type errors during compiling.
+- **FastAPI (Python)**: Auto-generated interactive Swagger API documentation (/docs) and rapid execution.
+- **SQLite (SQLAlchemy ORM)**: Lightweight relational storage stored locally (airbnb.db), easily connectable to hosted Turso serverless SQL.
+- **Tailwind CSS**: Simple class overrides to replicate Airbnb's custom card spacing, rounded modals, and font styles.
+- **Leaflet & OpenStreetMap**: Interactive map component mapping listing pins to coordinate points.
+
+---
+
+## How to Setup and Run Locally
+
+### 1. Setup Backend (FastAPI & SQLite)
 ```bash
+# Move to backend folder
 cd backend
-python3 -m venv venv
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
-pip install -r requirements.txt
-python -m app.seed
-```
 
-Start the FastAPI backend server:
-```bash
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate # Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Seed the database (Creates tables and populates dummy data)
+python -m app.seed
+
+# Launch server
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
-The API docs will be accessible at `http://localhost:8000/docs`.
+API endpoints are now interactive at http://localhost:8000/docs.
 
-### 2. Frontend Setup (Next.js)
-
-Open a new terminal window, navigate to the frontend directory, install npm packages, and run the development server:
-
+### 2. Setup Frontend (Next.js)
 ```bash
+# Move to frontend folder (in a new terminal window)
 cd frontend
+
+# Install packages
 npm install
+
+# Run dev mode
 npm run dev
 ```
-The application will launch on `http://localhost:3000`.
+The client dashboard launches at http://localhost:3000.
 
 ---
 
-## Core Features Implemented
+## Deployment Configurations
 
-1. **Home & Search**: Explore grid, category filtering (Cabins, Beachfront, Mansions, Treehouses, Lakefront, Trending), price threshold filter, and search modal (location text, check-in/out calendars, guest increments).
-2. **Details Page**: Interactive 5-photo grid layout, amenities list, availability calendar check blocking conflicting date ranges, live reservation price breakdown, and host profile details (Superhost recognition).
-3. **Booking Checkout**: Date validation constraints, total sum calculator, mock card checkout submission form, success confirmation overlay, and automated date-blocking in calendars.
-4. **Trips History**: lists current guest bookings, future cancel options, and a modal for submitting reviews on stayed listings.
-5. **Host CRUD Dashboard**: Active listing performance metrics, listings creations, edits, deletions, and an review history summary of guest reservations.
-6. **Wishlist**: Favorites grid populated via listing card heart indicators.
-7. **Evaluator Switcher**: The profile dropdown menu allows switching between three pre-seeded accounts (1 Guest, 2 Hosts) to test different user scopes in real time.
+* **Backend (Render)**: Set the root directory to backend, use pip install -r requirements.txt as build command, and python -m app.seed && uvicorn app.main:app --host 0.0.0.0 --port $PORT as start command. Configured via the workspace render.yaml blueprint.
+* **Frontend (Vercel)**: Set the root directory to frontend and register NEXT_PUBLIC_API_URL environment variable pointing to your deployed Render instance.
