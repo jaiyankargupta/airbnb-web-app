@@ -1,6 +1,6 @@
-# My Airbnb Clone - Fullstack SDE Assignment Submission
+# Fullstack Airbnb Clone
 
-This is my submission for the SDE Fullstack clone assignment. I built a functional clone of Airbnb's web application with the exact design layout, booking calendar interactions, and a fully equipped host CRUD dashboard.
+A fully functional clone of the Airbnb marketplace web application. It replicates Airbnb's clean aesthetics, booking workflows, and user experiences, complete with interactive maps and a host dashboard.
 
 ---
 
@@ -12,23 +12,23 @@ The architecture separates concerns between a stateless FastAPI backend and a st
 
 ```mermaid
 graph TD
-    subgraph Client Space (Next.js Frontend)
+    subgraph "Client Space (Next.js Frontend)"
         A[Browser / Visitor] -->|User Actions / Stays Search| B[Next.js App Router Pages]
         B -->|Reads Global State| C[React AppContext]
         B -->|Fetch Requests| D[api.ts Helper Client]
     end
 
-    subgraph API Space (FastAPI Backend)
+    subgraph "API Space (FastAPI Backend)"
         D -->|HTTP Request / JSON Payload| E[FastAPI Router Endpoints]
         E -->|Cors / Headers Validation| F[CORSMiddleware]
         F -->|Controllers Logic| G[controllers/*.py]
         
-        subgraph Caching Layer
+        subgraph "Caching Layer"
             G -->|Check Cache / Fetch Page| H[Upstash Redis Client]
         end
     end
 
-    subgraph Persistence Layer (Relational DB)
+    subgraph "Persistence Layer (Relational DB)"
         G -->|SQL Queries via SQLAlchemy| I[SQLite Database]
     end
     
@@ -159,8 +159,8 @@ try {
 ### 2. Upstash Redis Caching & Invalidation
 To minimize slow database queries, the listing details GET request is cached in Upstash Redis. When a host modifies their listing, or a guest adds a review, the cache for that listing is instantly invalidated to keep data consistent.
 
-### 3. Evaluator Role Switcher
-In the top-right profile menu, you can instantly change active users. This lets you switch between Alex Mercer (Guest) and Sarah Jenkins (Host) to test the complete booking workflow (creating listing -> booking it -> viewing the trips) in a single browser window.
+### 3. Account Switcher (Demo Tool)
+In the top-right profile menu, you can instantly change active users. This lets you switch between Alex Mercer (Guest) and Sarah Jenkins (Host) to test the complete booking workflow (creating listing -> booking it -> viewing the trips) in a single browser window for demonstration purposes.
 
 ---
 
